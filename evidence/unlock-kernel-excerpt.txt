@@ -1,0 +1,8 @@
+# Sanitized excerpt from the persistent-default boot on 2026-10-25.
+# PCI address replaced with <TARGET_BDF>; timestamps/host identity omitted.
+# These are boot-time messages, not a continuous or current register readback.
+turing_unlock: entry: plm=0xffffff8f ss0=0x0 ss1=0x0 wpr2=0x0:0x1ffffe00 boot=0x0
+turing_unlock: unlock result: ss0=0x88888888 ss1=0x8 readout=0x0 (want ss0=0x88888888 ss1=0x8 readout=0)
+turing_unlock: TU102 FEAT UNLOCKED
+pci <TARGET_BDF>: turing_unlock: unlocked
+# TU102 FEAT UNLOCKED is the upstream message string even on this TU106 board.

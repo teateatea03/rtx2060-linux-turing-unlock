@@ -1,0 +1,79 @@
+{
+  "record_date": "2026-10-25",
+  "follow_up_date": "2026-10-27",
+  "source": {
+    "repository": "https://github.com/nlzy/turing-unlock",
+    "commit": "1d379b724454d6fb7e8a7a8dd0ea359febc05ca3"
+  },
+  "profile": {
+    "gpu": "RTX 2060 12GB",
+    "chip": "TU106",
+    "pci_id": "10de:1f03",
+    "compute_capability": "7.5",
+    "os": "Ubuntu 26.04.1",
+    "kernel": "7.0.0-38-generic",
+    "nvidia_driver": "595.99.02",
+    "power_limit_watts": 184,
+    "secure_boot": false
+  },
+  "stages": {
+    "trial": {
+      "unlock_reported": true,
+      "expected_selectors": true,
+      "completed_cases": 5,
+      "planned_cases": 6,
+      "incomplete_case": "8192 FP32_pedantic: CUDA allocation OOM",
+      "timing_confounded": true
+    },
+    "restoration": {
+      "normal_boot_verified": true,
+      "trial_module_absent": true,
+      "original_boot_files_hashes_match": true
+    },
+    "persistent": {
+      "default_boot_verified_without_next_entry": true,
+      "unlock_reported": true,
+      "smoke_completed_cases": 2,
+      "ssh_active": true,
+      "gdm_active": true,
+      "temporary_guard_retired": true
+    },
+    "follow_up": {
+      "same_boot_as_persistent_verification": true,
+      "module_loaded": true,
+      "driver_responding": true,
+      "ssh_active": true,
+      "gdm_active": true,
+      "no_xid_found_in_queried_current_boot_kernel_log": true,
+      "selectors_reread": false,
+      "new_workload_run": false
+    }
+  },
+  "selector_readback": {
+    "ss0": "0x88888888",
+    "ss1": "0x8",
+    "readout": "0x0",
+    "scope": "boot-time readback"
+  },
+  "reliable_performance_gain": null,
+  "application_throughput": null,
+  "correctness_scope": {
+    "cpu_reference_samples_per_completed_case": 64,
+    "input": "deterministic dyadic FP16-representable values",
+    "max_observed_abs_error": 0,
+    "nonfinite_outputs": 0,
+    "full_output_hashes_match_baseline": true,
+    "hash": "historical output_fnv64 field: noncryptographic FNV-style wordwise rolling hash, not standard bytewise FNV-1a"
+  },
+  "not_tested": [
+    "cold power cycle",
+    "suspend/resume",
+    "long duration stability",
+    "application/model throughput",
+    "GPU-hang recovery",
+    "fallback timer firing",
+    "visual display output",
+    "arbitrary numerical input/rounding edge cases"
+  ],
+  "redaction": "Network addresses, hostnames, usernames, boot IDs, disk UUIDs and actual BDF omitted. No timing or numerical values changed."
+}

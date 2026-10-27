@@ -1,0 +1,61 @@
+#include <cuda_runtime.h>
+#include <cuda_fp16.h>
+#include <cublas_v2.h>
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <strings.h>
+#include <vector>
+#define CK(x) do { cudaError_t e=(x); if(e!=cudaSuccess){fprintf(stderr,"CUDA error %s:%d: %s\n",__FILE__,__LINE__,cudaGetErrorString(e));exit(2);} } while(0)
+#define BL(x) do { cublasStatus_t e=(x); if(e!=CUBLAS_STATUS_SUCCESS){fprintf(stderr,"cuBLAS error %s:%d: %d\n",__FILE__,__LINE__,(int)e);exit(3);} } while(0)
+static uint32_t mix(uint32_t v){v^=v>>16;v*=0x7feb352dU;v^=v>>15;v*=0x846ca68bU;return v^(v>>16);}
+static float val(size_t i,uint32_t seed){return (int(mix(uint32_t(i)^seed)%33)-16)/16.0f;}
+int main(){
+ int count=0,dev=-1;CK(cudaGetDeviceCount(&count));
+ for(int i=0;i<count;i++){char bdf[32];CK(cudaDeviceGetPCIBusId(bdf,sizeof(bdf),i));fprintf(stderr,"CUDA device %d BDF=%s\n",i,bdf);if(strcasecmp(bdf,"@TARGET_BDF@")==0)dev=i;}
+ if(dev<0){fprintf(stderr,"Target BDF absent\n");return 4;}
+ CK(cudaSetDevice(dev));cudaDeviceProp p;CK(cudaGetDeviceProperties(&p,dev));
+ if(p.major!=7||p.minor!=5||p.totalGlobalMem<11ULL*1024*1024*1024){fprintf(stderr,"Target identity mismatch\n");return 5;}
+ int runtime=0,driver=0;CK(cudaRuntimeGetVersion(&runtime));CK(cudaDriverGetVersion(&driver));
+ cublasHandle_t h;BL(cublasCreate(&h));
+ BL(cublasSetMathMode(h,CUBLAS_MATH_DISALLOW_REDUCED_PRECISION_REDUCTION));
+ int cv=0;BL(cublasGetVersion(h,&cv));
+ printf("{\"type\":\"meta\",\"name\":\"%s\",\"bdf\":\"@TARGET_BDF@\",\"sm\":75,\"runtime\":%d,\"driver_api\":%d,\"cublas\":%d,\"warmups\":5,\"rounds\":5,\"iterations\":10,\"input\":\"dyadic_seeded\",\"output\":\"FP32\",\"cpu_samples\":64}\n",p.name,runtime,driver,cv);fflush(stdout);
+ bool bad=false;
+ for(int n: {2048,4096,8192}){
+  size_t cells=size_t(n)*n;std::vector<__half> ah(cells),bh(cells);std::vector<float> c(cells);
+  for(size_t i=0;i<cells;i++){ah[i]=__float2half(val(i,1234567));bh[i]=__float2half(val(i,7654321));}
+  void *a=nullptr,*b=nullptr;float *out=nullptr;
+  CK(cudaMalloc(&out,cells*sizeof(float)));
+  cudaEvent_t start,stop;CK(cudaEventCreate(&start));CK(cudaEventCreate(&stop));
+  for(int mode=0;mode<2;mode++){
+   bool half=(mode==0);size_t bytes=cells*(half?sizeof(__half):sizeof(float));
+   CK(cudaMalloc(&a,bytes));CK(cudaMalloc(&b,bytes));
+   if(half){CK(cudaMemcpy(a,ah.data(),bytes,cudaMemcpyHostToDevice));CK(cudaMemcpy(b,bh.data(),bytes,cudaMemcpyHostToDevice));}
+   else{
+    std::vector<float> af(cells),bf(cells);
+    for(size_t i=0;i<cells;i++){af[i]=__half2float(ah[i]);bf[i]=__half2float(bh[i]);}
+    CK(cudaMemcpy(a,af.data(),bytes,cudaMemcpyHostToDevice));CK(cudaMemcpy(b,bf.data(),bytes,cudaMemcpyHostToDevice));
+   }
+   float alpha=1,beta=0;
+   auto gemm=[&](){BL(cublasGemmEx(h,CUBLAS_OP_N,CUBLAS_OP_N,n,n,n,&alpha,a,half?CUDA_R_16F:CUDA_R_32F,n,b,half?CUDA_R_16F:CUDA_R_32F,n,&beta,out,CUDA_R_32F,n,half?CUBLAS_COMPUTE_32F:CUBLAS_COMPUTE_32F_PEDANTIC,half?CUBLAS_GEMM_DEFAULT_TENSOR_OP:CUBLAS_GEMM_DEFAULT));};
+   for(int i=0;i<5;i++)gemm();CK(cudaDeviceSynchronize());
+   std::vector<float> times;
+   for(int round=0;round<5;round++){CK(cudaEventRecord(start));for(int i=0;i<10;i++)gemm();CK(cudaEventRecord(stop));CK(cudaEventSynchronize(stop));float ms;CK(cudaEventElapsedTime(&ms,start,stop));times.push_back(ms/10);}
+   CK(cudaMemcpy(c.data(),out,cells*sizeof(float),cudaMemcpyDeviceToHost));
+   double maxerr=0;int failures=0;
+   for(int s=0;s<64;s++){int row=int(mix(s+8101)%n),col=int(mix(s+9912)%n);double ref=0;for(int k=0;k<n;k++)ref+=double(__half2float(ah[size_t(row)+size_t(k)*n]))*double(__half2float(bh[size_t(k)+size_t(col)*n]));double e=fabs(double(c[size_t(row)+size_t(col)*n])-ref);maxerr=std::max(maxerr,e);if(e>1e-6)failures++;}
+   uint64_t hash=1469598103934665603ULL;size_t nonfinite=0;for(float f:c){if(!std::isfinite(f))nonfinite++;uint32_t bits;memcpy(&bits,&f,4);hash^=bits;hash*=1099511628211ULL;}
+   auto sorted=times;std::sort(sorted.begin(),sorted.end());double ms=sorted[2],tf=2.0*n*n*n/ms/1e9;
+   printf("{\"type\":\"gemm\",\"mode\":\"%s\",\"n\":%d,\"median_ms\":%.9f,\"tflops\":%.6f,\"max_abs_error\":%.9g,\"sample_failures\":%d,\"nonfinite\":%zu,\"output_fnv64\":\"%016llx\",\"round_ms\":[%.9f,%.9f,%.9f,%.9f,%.9f]}\n",half?"FP16_FP32accum":"FP32_pedantic",n,ms,tf,maxerr,failures,nonfinite,(unsigned long long)hash,times[0],times[1],times[2],times[3],times[4]);fflush(stdout);
+   if(failures||nonfinite)bad=true;
+   CK(cudaFree(a));CK(cudaFree(b));
+   if(bad)break;
+  }
+  CK(cudaEventDestroy(start));CK(cudaEventDestroy(stop));CK(cudaFree(out));if(bad)break;
+ }
+ BL(cublasDestroy(h));return bad?6:0;
+}

@@ -1,0 +1,22 @@
+# Locally generated artifacts and separately licensed NVIDIA inputs
+/trial-work*/
+/build/
+/inputs/
+/assets/
+/assets.src/
+/upstream/
+/.publication-work/
+*.bin
+*.ko
+*.rom
+*.run
+*.deb
+*.rpm
+*.tar
+*.tar.*
+*.zip
+initrd*
+.env
+.env.*
+*.local.env
+__pycache__/

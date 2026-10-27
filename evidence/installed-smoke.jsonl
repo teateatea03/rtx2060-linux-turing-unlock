@@ -1,0 +1,3 @@
+{"type":"meta","name":"NVIDIA GeForce RTX 2060","bdf":"<TARGET_BDF>","sm":75,"runtime":12040,"driver_api":13020,"cublas":120405,"warmups":5,"rounds":5,"iterations":10,"input":"dyadic_seeded","output":"FP32","cpu_samples":64}
+{"type":"gemm","mode":"FP16_FP32accum","n":2048,"median_ms":0.570572793,"tflops":30.109864,"max_abs_error":0,"sample_failures":0,"nonfinite":0,"output_fnv64":"68115def87512b83","round_ms":[0.453260809,0.587897599,0.582246423,0.54927361,0.570572793]}
+{"type":"gemm","mode":"FP32_pedantic","n":2048,"median_ms":3.461648226,"tflops":4.962916,"max_abs_error":0,"sample_failures":0,"nonfinite":0,"output_fnv64":"68115def87512b83","round_ms":[3.568278551,3.61123848,3.461648226,2.762572765,2.74537611]}

@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-27",
+  "scope": "publication checks only; no new GPU workload/reboot",
+  "json_and_jsonl_parsed": true,
+  "relative_markdown_links_exist": true,
+  "private_identifiers_absent_from_allowlisted_files": true,
+  "source_templates_roundtrip_to_tested_sources": true,
+  "expanded_hook_sh_n_passed": true,
+  "full_and_smoke_cuda_sources_compiled_on_measured_linux_host": true,
+  "compiler_command": "nvcc -ccbin g++-13 -O3 -arch=sm_75 <source.cu> -lcublas -o <local-output>",
+  "gpu_binaries_executed": false,
+  "completed_case_counts": {
+    "baseline": 6,
+    "trial": 5,
+    "persistent_smoke": 2
+  },
+  "gitleaks_qtools_candidate_scan": "passed; final scan checked separately before publication",
+  "files_sha256": {
+    "README.md": "024538640c0b351353ec71b6b0f3a974e3b287f8e2292e0f71a9f3340961ff17",
+    "README.zh-TW.md": "b6b48c4630f6831aea23a045038bdf2d533567b991aa7c527b8e41e03508483a",
+    "docs/REPRODUCE.zh-TW.md": "4daf496a7e9dfae6bf858ab1ea20b68b000f94dcd55cc3203f704ead2532328b",
+    "docs/RECOVERY.zh-TW.md": "e2f0966e8a7aa248b30647ee2817932bed5318856c59f7ef8610cfc78835a1e9",
+    "docs/RESULTS.md": "2f918762d769b1661c26f7e31b2155f085449517cbca843b40c52b74ce753f53",
+    "docs/REFERENCES.md": "4dde2f2098c424e738bbffa6f75be95d8a869debef8a76986854eaaf90274386",
+    "docs/VALIDATION.md": "f31e009d4c2e567adc45e467f74b9e4914008a48a7626b131e428c7ae6a1af2f",
+    "evidence/verification.json": "0c940b75c6af002153699e6453137bdd25bd3858b80ebf5f76c8963b75871287",
+    "evidence/unlock-kernel-excerpt.txt": "0412d7a0b337404567f49b9e81c279a1c098155bf74cd24db85b45e8dee76b7f",
+    "evidence/trial-baseline.jsonl": "f31d71a1608b229185780af56123831bd755428e17268b2f9d8741f2f9e5d7a6",
+    "evidence/trial-unlocked-partial.jsonl": "effb2a59d8fbc798b2d1d8603082c6ee279228c2dbf3557f8602f0567d6f9dc8",
+    "evidence/installed-smoke.jsonl": "026a470c718ea6e6e93cbd7f17584fb1254168f75f12878fc3d08b64beb1de2a",
+    "examples/01-turing-unlock-trial.sh.in": "8a17ff697aba6c6b4261735909b0e679b0f40b3a21ac4c059378f1b5e9d501cb",
+    "tools/gemm_check.cu.in": "6df142f5a9d3b5c47380e6b1d5cc89b5ca47595343b64067393f04f8be90a96a",
+    ".gitignore": "ad65c0cfaad63905fe65e6daa8db86b34867423c572dcd0ca0e9226b76ea579d",
+    ".gitattributes": "d60f352d0db1404c70afb4bb8b2ca3fd1c610572aa40720e8a0b7baa7885418c",
+    "LICENSE": "5fb2383b4b6ea8d71d8b7520e7e5517a1a29934da311b0bab8e575120d7df248"
+  }
+}

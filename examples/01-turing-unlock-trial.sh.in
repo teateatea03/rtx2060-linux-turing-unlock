@@ -1,0 +1,18 @@
+#!/bin/sh
+# One targeted attempt in the experimental initramfs, before udev/NVIDIA.
+turing_unlock_trial_once() {
+    case " $(cat /proc/cmdline) " in
+        *" turing_unlock_trial=20261025 "*) ;;
+        *) return 0 ;;
+    esac
+    [ ! -e /run/turing-unlock-trial-attempted ] || return 0
+    : > /run/turing-unlock-trial-attempted
+    echo "turing-unlock-trial: BEGIN target=@TARGET_BDF@" > /dev/kmsg
+    /usr/sbin/insmod /usr/lib/turing-unlock-trial/turing_unlock.ko targets=@TARGET_BDF@
+    trial_result=$?
+    printf '%s\n' "$trial_result" > /run/turing-unlock-trial-insmod-status
+    echo "turing-unlock-trial: END insmod_status=$trial_result" > /dev/kmsg
+    return 0
+}
+turing_unlock_trial_once
+unset -f turing_unlock_trial_once
